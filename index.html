@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>列車時刻表</title>
+    <script>
+        async function fetchTrainData(trainId) {
+            const lines = {
+                "joban1": "9041.json",
+                "joban2": "9042.json",
+                "mito": "202.json",
+                "suigun1": "2031.json",
+                "suigun2": "2032.json",
+                "banetsu": "106.json"
+            };
+            
+            let trainInfo = [];
+
+            for (const [line, file] of Object.entries(lines)) {
+                const response = await fetch(`https://doko-train.jp/json/diagram/line/${file}`);
+                const data = await response.json();
+                trainInfo.push(...data.DIAGRAM.filter(train => train.TRAIN_ID === trainId));
+            }
+
+            if (trainInfo.length > 0) {
+                displayTimetable(trainInfo);
+            } else {
+                document.getElementById("output").innerHTML = "<p>列車情報が見つかりません。</p>";
+            }
+        }
+
+        function displayTimetable(trainInfo) {
+            let outputHTML = "<table border='1'><tr><th>駅名</th><th>到着</th><th>出発</th></tr>";
+
+            trainInfo.forEach(train => {
+                train.SDL.forEach(station => {
+                    let arrival = station.STA_TM ? new Date(station.STA_TM * 1000).toLocaleTimeString("ja-JP") : "--:--";
+                    let departure = station.STD_TM ? new Date(station.STD_TM * 1000).toLocaleTimeString("ja-JP") : "--:--";
+                    outputHTML += `<tr><td>${station.RLSTC_LNAME}</td><td>${arrival}</td><td>${departure}</td></tr>`;
+                });
+            });
+
+            outputHTML += "</table>";
+            document.getElementById("output").innerHTML = outputHTML;
+        }
+
+        function searchTrain() {
+            const trainId = document.getElementById("trainId").value;
+            fetchTrainData(trainId);
+        }
+    </script>
+</head>
+<body>
+    <h1>列車時刻表検索</h1>
+    <input type="text" id="trainId" placeholder="列車番号を入力">
+    <button onclick="searchTrain()">検索</button>
+    <div id="output"></div>
+</body>
+</html>
