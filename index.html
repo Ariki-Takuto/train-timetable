@@ -21,7 +21,16 @@
     for (const [line, file] of Object.entries(lines)) {
         try {
             const response = await fetch(proxyUrl + encodeURIComponent(`https://doko-train.jp/json/diagram/line/${file}`));
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
             const json = await response.json();
+            if (!json.contents) {
+                throw new Error("JSON data not found in response.");
+            }
+            
             const data = JSON.parse(json.contents); // allorigins は JSON を文字列として返す
             trainInfo.push(...data.DIAGRAM.filter(train => train.TRAIN_ID === trainId));
         } catch (error) {
