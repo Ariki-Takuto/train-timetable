@@ -6,29 +6,35 @@
     <title>列車時刻表</title>
     <script>
         async function fetchTrainData(trainId) {
-            const lines = {
-                "joban1": "9041.json",
-                "joban2": "9042.json",
-                "mito": "202.json",
-                "suigun1": "2031.json",
-                "suigun2": "2032.json",
-                "banetsu": "106.json"
-            };
-            
-            let trainInfo = [];
+    const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+    const lines = {
+        "joban1": "9041.json",
+        "joban2": "9042.json",
+        "mito": "202.json",
+        "suigun1": "2031.json",
+        "suigun2": "2032.json",
+        "banetsu": "106.json"
+    };
 
-            for (const [line, file] of Object.entries(lines)) {
-                const response = await fetch(`https://doko-train.jp/json/diagram/line/${file}`);
-                const data = await response.json();
-                trainInfo.push(...data.DIAGRAM.filter(train => train.TRAIN_ID === trainId));
-            }
+    let trainInfo = [];
 
-            if (trainInfo.length > 0) {
-                displayTimetable(trainInfo);
-            } else {
-                document.getElementById("output").innerHTML = "<p>列車情報が見つかりません。</p>";
-            }
+    for (const [line, file] of Object.entries(lines)) {
+        try {
+            const response = await fetch(proxyUrl + `https://doko-train.jp/json/diagram/line/${file}`);
+            const data = await response.json();
+            trainInfo.push(...data.DIAGRAM.filter(train => train.TRAIN_ID === trainId));
+        } catch (error) {
+            console.error("データ取得エラー:", error);
         }
+    }
+
+    if (trainInfo.length > 0) {
+        displayTimetable(trainInfo);
+    } else {
+        document.getElementById("output").innerHTML = "<p>列車情報が見つかりません。</p>";
+    }
+}
+
 
         function displayTimetable(trainInfo) {
             let outputHTML = "<table border='1'><tr><th>駅名</th><th>到着</th><th>出発</th></tr>";
